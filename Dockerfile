@@ -1,6 +1,8 @@
-# Stage 1: Build the application using Maven and JDK 25
-FROM maven:3.9.9-eclipse-temurin-25-alpine AS build
+# Stage 1: Build using JDK 25 directly
+FROM eclipse-temurin:25-jdk-alpine AS build
 WORKDIR /app
+# Install Maven manually since there's no pre-combined JDK 25 image
+RUN apk add --no-cache maven
 COPY . .
 RUN mvn clean package -DskipTests
 
@@ -9,8 +11,6 @@ FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
-# Render or Railway will provide the PORT variable
+# Use the PORT environment variable provided by Render
 EXPOSE 8080
-
-# Use the PORT environment variable to set the server port dynamically
 ENTRYPOINT ["java", "-jar", "/app/app.jar", "--server.port=${PORT}"]
