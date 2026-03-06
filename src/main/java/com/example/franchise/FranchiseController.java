@@ -6,8 +6,8 @@ import java.util.List;
 
 @RestController 
 @RequestMapping("/franchises")
-// CRITICAL: This allows your React app on port 5173 to access this controller
-@CrossOrigin(origins = "http://localhost:5173") 
+// FIX: Using originPatterns to avoid the "allowCredentials" security conflict
+@CrossOrigin(originPatterns = "*") 
 public class FranchiseController {
 
     @Autowired 
@@ -30,8 +30,16 @@ public class FranchiseController {
 
     @PutMapping("/{id}")
     public Franchise update(@PathVariable Long id, @RequestBody Franchise f) {
-        f.setId(id);
-        return repo.save(f);
+        return repo.findById(id).map(existing -> {
+            existing.setName(f.getName());
+            existing.setFranchiseName(f.getFranchiseName());
+            existing.setOwnerName(f.getOwnerName());
+            existing.setState(f.getState());
+            existing.setNetworth(f.getNetworth());
+            existing.setEmail(f.getEmail());
+            existing.setPassword(f.getPassword());
+            return repo.save(existing);
+        }).orElse(null);
     }
 
     @DeleteMapping("/{id}")
